@@ -77,11 +77,11 @@
         }
 
         async function setup() {
-            if (!localStorage.getItem("id")) {
+            id = localStorage.getItem("id");
+            
+            if (!id) {
                 id = generateRandomCode(4);
-                localStorage.setItem("id", JSON.stringify(id));
-            } else {
-                id = localStorage.getItem("id");
+                localStorage.setItem("id", id);
             }
 
             const data = await fetchData("GET", id);
