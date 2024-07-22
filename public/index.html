@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/css/styles.css" />
 </head>
 
-<body>
+<body onload="setup()">
     <div class="container">
         <h1>the states of lim</h1>
         <p id="subheading"></p>
@@ -43,11 +43,8 @@
     </div>
 
     <script>
-        if (!localStorage.getItem("id")) {
-            const id = generateRandomCode(64);
-            localStorage.setItem("id", id);
-        }
-
+        const id;
+        
         function generateRandomCode(length) {
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?';
             let randomCode = '';
@@ -81,6 +78,15 @@
             const response = await fetch(`/.netlify/functions/save?id=${id}`, options);
             const data = await response.json();
             return data;
+        }
+
+        function setup() {
+            if (!localStorage.getItem("id")) {
+                id = generateRandomCode(8);
+                localStorage.setItem("id", id);
+            }
+
+            document.getElementById("subheading").textContent = `user ${id}, lvl ${fetchData("GET", id).lvl}`;
         }
     </script>
 
