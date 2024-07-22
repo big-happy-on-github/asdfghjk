@@ -82,6 +82,7 @@
             if (!id) {
                 id = generateRandomCode(4);
                 localStorage.setItem("id", id);
+                console.log(id);
             }
 
             const data = await fetchData("GET", id);
