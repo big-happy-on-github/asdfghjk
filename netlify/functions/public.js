@@ -7,7 +7,7 @@ exports.handler = async event => {
     if (event.httpMethod === 'GET') {
         return {
             statusCode: 200,
-            body: JSON.stringify(people[id]) || JSON.stringify([])
+            body: JSON.stringify(people[id]) || JSON.stringify({ lvl: 1 })
         };
     } else if (event.httpMethod === 'POST') {
         people[id] = requestBody;
