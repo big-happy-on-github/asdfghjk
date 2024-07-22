@@ -7,13 +7,13 @@ exports.handler = async event => {
     if (event.httpMethod === 'GET') {
         return {
             statusCode: 200,
-            body: JSON.stringify(people[id]) || "ERR: people[id]"
+            body: JSON.stringify(people[id]) || JSON.stringify([])
         };
     } else if (event.httpMethod === 'POST') {
         people[id] = requestBody;
         return {
             statusCode: 200,
-            body: JSON.stringify(people[id]) || "ERR: people[id]"
+            body: JSON.stringify(people[id])
         };
     } else {
         return {
