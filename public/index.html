@@ -79,7 +79,7 @@
         async function setup() {
             if (!localStorage.getItem("id")) {
                 id = generateRandomCode(4);
-                localStorage.setItem("id", id);
+                localStorage.setItem("id", JSON.stringify(id));
             } else {
                 id = localStorage.getItem("id");
             }
