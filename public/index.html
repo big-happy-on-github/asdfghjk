@@ -1,26 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>the states of lim</title>
-    <link rel="stylesheet" href="/css/styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The States of Lim</title>
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
-
 <body onload="setup()">
     <div class="container">
-        <h1>the states of lim</h1>
+        <h1>The States of Lim</h1>
         <p id="subheading"></p>
         <p>
-            To add Netlify Functions, create a JavaScript, TypeScript, or Go function to your project in a <code>netlify/functions</code> directory. You can customize the address for your functions using Netlify's Redirects API
+            To add Netlify Functions, create a JavaScript, TypeScript, or Go function to your project in a <code>netlify/functions</code> directory. You can customize the address for your functions using Netlify's Redirects API.
         </p>
         <h2>Examples</h2>
         <ul>
             <li><a href="/.netlify/functions/hello?name=you">Hello World</a> ( /.netlify/functions/hello?name=you )</li>
             <li><a href="/api/hello?name=you">Hello World</a> ( /api/hello?name=you )</li>
         </ul>
-
 
         <h2>More information</h2>
         <ul>
@@ -51,45 +48,47 @@
             const charactersLength = characters.length;
             
             for (let i = 0; i < length; i++) {
-            randomCode += characters.charAt(Math.floor(Math.random() * charactersLength));
+                randomCode += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
             
             return randomCode;
         }
         
-        async function fetchData(httpMethod, id, data=false) {
-            if (httpMethod == "GET") {
-                const options = {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                };
-            } else if (httpMethod == "POST") {
-                const options = {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                };
+        async function fetchData(httpMethod, id, data = false) {
+            let options = {
+                method: httpMethod,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+            
+            if (httpMethod === "POST") {
+                options.body = JSON.stringify(data);
             }
         
-            const response = await fetch(`/.netlify/functions/public?id=${id}`, options);
-            const data = await response.json();
-            return data;
+            try {
+                const response = await fetch(`/.netlify/functions/public?id=${id}`, options);
+                const responseData = await response.json();
+                return responseData;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                return null;
+            }
         }
 
-        function setup() {
+        async function setup() {
             if (!localStorage.getItem("id")) {
                 id = generateRandomCode(4);
                 localStorage.setItem("id", id);
+            } else {
+                id = localStorage.getItem("id");
             }
 
-            document.getElementById("subheading").textContent = `user ${id}, lvl ${fetchData("GET", id).lvl}`;
+            const data = await fetchData("GET", id);
+            if (data) {
+                document.getElementById("subheading").textContent = `User ${id}, Level ${data.lvl}`;
+            }
         }
     </script>
-
 </body>
-
 </html>
