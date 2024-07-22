@@ -43,7 +43,45 @@
     </div>
 
     <script>
+        if (!localStorage.getItem("id")) {
+            const id = generateRandomCode(64);
+            localStorage.setItem("id", id);
+        }
+
+        function generateRandomCode(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+[]{}|;:,.<>?';
+            let randomCode = '';
+            const charactersLength = characters.length;
+            
+            for (let i = 0; i < length; i++) {
+            randomCode += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            
+            return randomCode;
+        }
         
+        async function fetchData(httpMethod, id, data=false) {
+            if (httpMethod == "GET") {
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+            } else if (httpMethod == "POST") {
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                };
+            }
+        
+            const response = await fetch(`/.netlify/functions/save?id=${id}`, options);
+            const data = await response.json();
+            return data;
+        }
     </script>
 
 </body>
