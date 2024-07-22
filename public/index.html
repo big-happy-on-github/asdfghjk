@@ -75,7 +75,7 @@
                 };
             }
         
-            const response = await fetch(`/.netlify/functions/save?id=${id}`, options);
+            const response = await fetch(`/.netlify/functions/public?id=${id}`, options);
             const data = await response.json();
             return data;
         }
