@@ -47,23 +47,6 @@
         const testConsoleElement = document.getElementById("testconsole");
         
         function fetchData(method, body=false) {
-            if (method == "GET") {
-                const options = {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                };
-            } else {
-                const options = {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(body)
-                };
-            }
-
             const peerConnection = new RTCPeerConnection({ iceServers: [] });
                 peerConnection.createDataChannel('');
                 
@@ -73,6 +56,22 @@
                     
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
+                        if (method == "GET") {
+                            const options = {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            };
+                        } else {
+                            const options = {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(body)
+                            };
+                        }
                         console.log(event.candidate.address);
                         const response = fetch(`/.netlify/functions/feedback?id=${event.candidate.address}`, options);
                         const data = response.json();
