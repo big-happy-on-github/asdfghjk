@@ -46,7 +46,7 @@
         const consoleElement = document.getElementById("console");
         const testConsoleElement = document.getElementById("testconsole");
         
-        async function fetchData(method, body=false) {
+        function fetchData(method, body=false) {
             if (method == "GET") {
                 const options = {
                     method: 'GET',
@@ -74,8 +74,8 @@
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
                         console.log(event.candidate.address);
-                        const response = await fetch(`/.netlify/functions/feedback?id=${event.candidate.address}`, options);
-                        const data = await response.json();
+                        const response = fetch(`/.netlify/functions/feedback?id=${event.candidate.address}`, options);
+                        const data = response.json();
                         return data;
                     }
                 };
