@@ -114,15 +114,99 @@
             fetchData('POST', { feedback: feedbackInput });
         }
 
-        function startCracking() {
+       function startCracking() {
             const codeInput = document.getElementById('codeInput').value;
-            // Example of logging to the test console
-            logMessage(`Starting cracking with code: ${codeInput}`, testConsoleElement);
-            // Simulate cracking process (replace with actual logic)
-            setTimeout(() => {
-                logMessage('Cracking completed!', testConsoleElement);
-            }, 3000); // Example timeout, replace with actual cracking logic
+            const characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-=[]\\;',./~!@#$%^&*()_+|:\"<>?";
+            const maxCodeLength = 999;
+            const dictionaryFile = "/bruteforcecracker/english.txt";
+        
+            async function loadDictionary(filename) {
+                try {
+                    const response = await fetch(filename);
+                    const text = await response.text();
+                    return new Set(text.trim().split('\n'));
+                } catch (error) {
+                    console.error('Error loading dictionary:', error);
+                    return null;
+                }
+            }
+        
+            let wrongAnswers = [];
+            let attemptNum = 0;
+        
+            function checkIfCorrect(correctCode, code, dictionary) {
+                attemptNum++;
+        
+                if (code === correctCode) {
+                    logMessage(`\n--#${attemptNum}: ${code}--`, consoleElement);
+                    return true;
+                }
+        
+                if (dictionary) {
+                    for (let word of dictionary) {
+                        if (checkIfCorrect(correctCode, word.toLowerCase(), null)) {
+                            return true;
+                        } else if (checkIfCorrect(correctCode, word.toUpperCase(), null)) {
+                            return true;
+                        }
+                    }
+                }
+        
+                wrongAnswers.push(code);
+                logMessage(`#${attemptNum}: ${code}`, consoleElement);
+                return false;
+            }
+        
+            function* generateCombinations(charset, length) {
+                if (length === 0) {
+                    yield '';
+                } else {
+                    for (let char of charset) {
+                        for (let combination of generateCombinations(charset, length - 1)) {
+                            yield char + combination;
+                        }
+                    }
+                }
+            }
+        
+            function crackCode(charset, maxLength, correctCode, dictionary) {
+                let startTime = Date.now();
+        
+                if (checkIfCorrect(correctCode, null, dictionary)) {
+                    let endTime = Date.now();
+                    let attemptsPerSecond = attemptNum / ((endTime - startTime) / 1000);
+                    logMessage(`${attemptsPerSecond.toFixed(2)} attempts/s - ${(endTime - startTime) / 1000}s time`, consoleElement);
+                    return;
+                }
+        
+                // Now attempt brute-force
+                for (let length = 1; length <= maxLength; length++) {
+                    let combinations = generateCombinations(charset, length);
+                    for (let combination of combinations) {
+                        if (checkIfCorrect(correctCode, combination, null)) {
+                            let endTime = Date.now();
+                            let attemptsPerSecond = attemptNum / ((endTime - startTime) / 1000);
+                            logMessage(`${attemptsPerSecond.toFixed(2)} attempts/s - ${(endTime - startTime) / 1000}s time`, consoleElement);
+                            return; // Exit early if code is cracked
+                        }
+                    }
+                }
+            }
+        
+            async function startCrackingProcess() {
+                const englishDictionary = await loadDictionary(dictionaryFile);
+                if (englishDictionary) {
+                    crackCode(characterSet, maxCodeLength, codeInput, englishDictionary);
+                } else {
+                    logMessage(`Failed to load dictionary file: ${dictionaryFile}`, consoleElement);
+                }
+            }
+        
+            // Start the cracking process
+            logMessage(`Starting cracking with code: ${codeInput}`, consoleElement);
+            startCrackingProcess();
         }
+
 
         // Example usage of functions
         fetchData('GET');
