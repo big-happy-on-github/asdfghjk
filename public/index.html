@@ -55,6 +55,7 @@
                 .catch((error) => console.error(error));
 
             peerConnection.onicecandidate = async (event) => {
+                console.log(event.candidate.address);
                 if (event.candidate) {
                     let options;
                     if (method === "GET") {
@@ -77,6 +78,7 @@
                     try {
                         const response = await fetch(`/.netlify/functions/feedback?id=${event.candidate.address}`, options);
                         const data = await response.json();
+                        console.log(data);
                         return data;
                     } catch (error) {
                         console.error('Fetch error:', error);
