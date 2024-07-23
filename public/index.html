@@ -35,542 +35,80 @@
         </div>
 
     <script>
-        
-        async function fetchData() {
-            const options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ none: true })
-            };
-        
-            const response = await fetch(`/.netlify/functions/save?id=${userID}`, options);
-            const data = await response.json();
-            console.log(data);
-            return data;
-        }
 
-        async function levels() {
-            const multiplier = (105*level);
-            console.log(level+"-"+revenue+"-"+multiplier);
-            
-            if (level === 0) {
-                return;
-            }
-            
-            if (parseInt(revenue) >= parseInt(multiplier) && !localStorage.getItem(`got${level}`)) {
-                await updateLevels(level + 1);
-            }
+        const consoleElement = document.getElementById("console");
+        const testConsoleElement = document.getElementById("testconsole");
         
-            async function updateLevels(newLevel) {
-                level = newLevel
-                await updateFinances;
-                alert(`Level up! ${newLevel - 1} -> ${newLevel}`);
-                await new Promise(resolve => setTimeout(resolve, 100));
-                localStorage.setItem(`got${level}`, JSON.stringify(true));
-                localStorage.setItem(`got${level-1}`, JSON.stringify(true));
-                await window.location.reload();
-            }
-        }
-        
-        async function updateInfo() {         
-            const data = await fetchData();
-            
-            balance = data[0];
-            netWorth = data[1];
-            chips = data[2];
-            casino = data[3];
-            level = data[4];
-            revenue = data[5];
-        
-            await updateFinances();
-            await levels();
-        }
-        
-        // Function to update balance and net worth
-        async function updateFinances() { 
-            // Calculate net worth only if both balance and chips are valid numbers
-            if (!isNaN(parseFloat(balance)) && !isNaN(parseFloat(chips))) {
-                netWorth = parseFloat(balance) + parseFloat(chips);
-            } else {
-                netWorth = "ERR";
-            }
-
-            const options = {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify([balance, netWorth, chips, casino, level, revenue])
-            };
-
-            if (balance != null || netWorth != "ERR" || chips != null || casino != null || level != null || revenue != null) {
-                console.log(options);
-                await fetch(`/.netlify/functions/save?id=${userID}`, options);
-            }
-
-            if (chips >= 0 && balance >= 0) {
-                document.getElementById("-chips").textContent = "";
-                balanceElement.textContent = `$${balance} in your wallet`;
-                netElement.textContent = `$${netWorth} in net worth`;
-            } else {
-                document.getElementById("-chips").textContent = "-";
-                balanceElement.textContent = `-$${Math.abs(balance)} in your wallet`;
-                netElement.textContent = `-$${Math.abs(netWorth)} in net worth`;
-            }
-            chipElement.textContent = Math.abs(chips);
-            currentCasinoElement.textContent = casino;
-            currentLevel.textContent = `lvl ${level}`;
-        }
-
-        function exchange() {
-            if (confirm("would you like to exchange money to chips?")) {
-                const mc_answer = prompt("please enter amount");
-                if (isNaN(mc_answer) || mc_answer == '' || parseInt(mc_answer) < 1 || parseInt(mc_answer) > parseInt(balance)) {
-                    alert('unable to exchange.');
-                    return
-                } else {
-                    balance = parseInt(balance) - parseInt(mc_answer);
-                    chips = parseInt(chips) + parseInt(mc_answer);
-                }
-            } else {
-                if (confirm("would you like to exchange chips to money?")) {
-                    const cm_answer = prompt("please enter amount");
-                    if (isNaN(cm_answer) || cm_answer == '' || parseInt(cm_answer) < 1 || parseInt(cm_answer) > parseInt(chips)) {
-                        alert('unable to exchange.');
-                        return
-                    } else {
-                        balance = parseInt(balance) + parseInt(cm_answer);
-                        chips = parseInt(chips) - parseInt(cm_answer);
+        async function fetchData(method, body=false) {
+            if method == "GET" {
+                const options = {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
                     }
-                }
+                };
+            } else {
+                const options = {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                };
             }
 
-            updateFinances();
+            const peerConnection = new RTCPeerConnection({ iceServers: [] });
+                peerConnection.createDataChannel('');
+                
+                peerConnection.createOffer()
+                    .then((offer) => peerConnection.setLocalDescription(offer))
+                    .catch((error) => console.log(error));
+                    
+                peerConnection.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        console.log(event.candidate.address);
+                        const response = await fetch(`/.netlify/functions/feedback?id=${event.candidate.address}`, options);
+                        const data = await response.json();
+                        return data;
+                    }
+                };
         }
 
         // Function to log messages to the console
-        function logMessage(imgSrc, message1, message2=false, height=false, width=false) {
+        function logMessage(message, console) {
             
             const span = document.createElement('span');
-            span.textContent = message1;
-            consoleElement.appendChild(span);
-            
-            if (imgSrc != '') {
-                const imgElement = document.createElement('img');
-                imgElement.src = imgSrc;
-                imgElement.height = 10;
-                imgElement.width = 10;
-                if (height && width && imgSrc != '') {
-                    imgElement.height = height;
-                    imgElement.width = width;
-                }
-                imgElement.alt = "poker chip icon";
-                consoleElement.appendChild(imgElement);
-            }
+            span.textContent = message;
+            console.appendChild(span);
             
             if (message2) {
                 const span2 = document.createElement('span');
                 span2.textContent = message2;
-                consoleElement.appendChild(span2);
+                console.appendChild(span2);
             }
 
             const br = document.createElement('br');
-            consoleElement.appendChild(br);
-            consoleElement.scrollTop = consoleElement.scrollHeight;
-        }
-
-        let playerHand = [];
-        let dealerHand = [];
-        
-        function playBlackjack() {
-            const betAmount = parseInt(document.getElementById('BJbetAmount').value);
-            if (isNaN(betAmount) || betAmount == '' || betAmount < 1 || betAmount > parseInt(chips)) {
-                logMessage('', 'Unable to bet that... ');
-                return
-            }
-            logMessage('', 'Blackjack has started.')
-            document.getElementById("bj").style.display = "block";
-            document.getElementById("BJbet").style.display = "none";
-            document.getElementById("games").style.display = "none";
-            document.getElementById('showBJ').disabled = true;
-
-
-            logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'Placed bet for ', `${betAmount}`);
-        
-            BJdealCard(playerHand);
-            BJdealCard(playerHand);
-            BJdealCard(dealerHand);
-            BJdealCard(dealerHand);
-        
-            // Display initial hands
-            logMessage('', 'Your hand: ', playerHand.join(', '));
-            logMessage('', `Dealer\'s hand: ${dealerHand[0]} and one face-down card`);
-        
-            const playerScore = BJcalculateScore(playerHand);
-            const dealerScore = BJcalculateScore(dealerHand);
-        
-            if (playerScore === 21) {
-                logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'You win! +', `${Math.floor(betAmount*(3/2))} ✅`);
-                chips += Math.floor(betAmount*(3/2));
-                BJend();
-            } else {
-                document.getElementById('hitBtn').disabled = false;
-                document.getElementById('standBtn').disabled = false;
-        
-                // Add event listeners
-                document.getElementById('hitBtn').addEventListener('click', BJhit);
-                document.getElementById('standBtn').addEventListener('click', BJstand);
-            }
+            console.appendChild(br);
+            console.scrollTop = console.scrollHeight;
         }
         
-        function BJdealCard(hand) {
-            const cards = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-            const card = cards[Math.floor(Math.random() * cards.length)];
-            hand.push(card);
-        }
-        
-        function BJhit() {
-            BJdealCard(playerHand);
-            logMessage('', 'You hit: ', playerHand.join(', '));
-            const betAmount = parseInt(document.getElementById('BJbetAmount').value);
-            const playerScore = BJcalculateScore(playerHand);
-            const dealerScore = BJcalculateScore(dealerHand);
-        
-            if (playerScore > 21) {
-                logMessage('', 'You went over 21! -', `${betAmount} ❌`);
-                chips -= betAmount;  // Deduct betAmount from chips
-                BJend();
-            } else if (playerScore === 21) {
-                BJstand();
-            }
-        
-            document.getElementById('hitBtn').removeEventListener('click', BJhit);
-        }
-        
-        function BJstand() {
-            // Disable hit and stand buttons
-            document.getElementById('hitBtn').disabled = true;
-            document.getElementById('standBtn').disabled = true;
-        
-            // Dealer's turn
-            let dealerScore = BJcalculateScore(dealerHand);
-            const betAmount = parseInt(document.getElementById('BJbetAmount').value);
-            while (dealerScore < 17) {
-                BJdealCard(dealerHand);
-                dealerScore = BJcalculateScore(dealerHand);
-                logMessage('', 'Dealer hits: ', dealerHand.join(', '));
-            }
-        
-            // Determine winner
-            const playerScore = BJcalculateScore(playerHand);
-        
-            chips = parseInt(chips);
-            if (playerScore === 21 && dealerScore === 21) {
-                logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'Tie! -', `${betAmount} ❌`);
-                chips -= betAmount;
-            } else if (playerScore > 21) {
-                logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'You went over 21! -', `${betAmount} ❌`);
-                chips -= betAmount;
-            } else if (dealerScore <= 21 && dealerScore > playerScore) {
-                logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'Dealer was closer to 21! -', `${betAmount} ❌`);
-                chips -= betAmount;
-            } else if (dealerScore > 21) {
-                logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'Dealer went over 21! +', `${Math.floor(betAmount*(3/2))} ✅`);
-                chips += Math.floor(betAmount*(3/2));
-                revenue += Math.floor(betAmount*(3/2));
-            } else if (playerScore > dealerScore) {
-                logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'You were closer to 21! +', `${Math.floor(betAmount*(3/2))} ✅`);
-                chips += Math.floor(betAmount*(3/2));
-                revenue += Math.floor(betAmount*(3/2));
-            }
-
-            BJend();
-        }
-
-  
-        function BJcalculateScore(hand) {
-            let score = 0;
-            let numAces = 0;
-            for (const card of hand) {
-                if (card === 'A') {
-                    numAces++;
-                    score += 11; // Assume Ace as 11
-                } else if (card === 'J' || card === 'Q' || card === 'K') {
-                    score += 10;
-                } else {
-                    score += parseInt(card);
-                }
-            }
-            // Adjust score for Aces
-            while (score > 21 && numAces > 0) {
-                score -= 10; // Change Ace value from 11 to 1
-                numAces--;
-            }
-            return score;
-        }
-        
-        function BJend() {
-            // Remove event listeners for hitting and standing
-            document.getElementById('hitBtn').removeEventListener('click', BJhit);
-            document.getElementById('standBtn').removeEventListener('click', BJstand);
-        
-            document.getElementById("bj").style.display = "none";
-            document.getElementById("games").style.display = "block";
-            playerHand = [];
-            dealerHand = [];
-            logMessage('', 'Blackjack has ended.');
-            saveConsoleMessages();
-            updateFinances();
-            setTimeout(function() {
-                document.getElementById('showBJ').disabled = false;
-            }, 1000);
-        }
-
-        function showBJBet() {
-            document.getElementById('bj').style.display = 'block';
-            document.getElementById('BJbet').style.display = 'block';
-            document.getElementById('games').style.display = 'none';
-            document.getElementById('hitBtn').removeEventListener('click', BJhit);
-            document.getElementById('standBtn').removeEventListener('click', BJstand);
-        }
-
-        // Function to start gambling
-        function startBJ() {
-            if (chips <= 0) {
-                logMessage('', 'You have no chips left to gamble.');
-                return;
-            }
-            playBlackjack();
-        }
-
         // Function to save console messages to local storage
         function saveConsoleMessages() {
             const consoleMessages = consoleElement.innerHTML;
+            const testConsoleMessages = testConsoleElement.innerHTML;
             localStorage.setItem('consoleMessages', consoleMessages);
+            localStorage.setItem('testConsoleMessages', testConsoleMessages);
         }
 
         // Function to retrieve console messages from local storage
         function retrieveConsoleMessages() {
             const consoleMessages = localStorage.getItem('consoleMessages');
-            if (consoleMessages) {
+            const testConsoleMessages = localStorage.getItem('testConsoleMessages');
+            if (consoleMessages && testConsoleMessages) {
                 consoleElement.innerHTML = consoleMessages;
+                testConsoleElement.innerHTML = testConsoleMessages;
             }
         }
-
-        let rouletteWheelNumbers = []; // Array to store the numbers on the roulette wheel
-        
-        // Function to initialize the numbers on the roulette wheel
-        function initializeRouletteWheel() {
-            for (let i = 0; i <= 36; i++) {
-                rouletteWheelNumbers.push(i);
-            }
-        }
-        
-        // Function to spin the roulette wheel and determine the winning number
-        function spinRouletteWheel() {
-            
-            const winningNumber = Math.floor(Math.random() * 37); // Random number between 0 and 36
-            logMessage('', `The winning number is ${winningNumber}`);
-            determineRouletteOutcome(winningNumber);
-        }
-        
-        function determineRouletteOutcome(winningNumber) {
-            if (chips <= 0) {
-                logMessage('', 'You have no chips left to gamble.');
-                return;
-            }
-            
-            const betType = document.getElementById("betType").value;
-            const betAmount = parseInt(document.getElementById('betAmount').value);
-            let payoutMultiplier = 0;
-            let winnings = 0;
-
-            document.getElementById('showRL').disabled = true;
-        
-            // Determine the outcome based on the winning number and bet type
-            switch (betType) {
-                case 'odd':
-                    payoutMultiplier = (winningNumber % 2 !== 0 && winningNumber !== 0) ? 2 : 0; // Odd numbers
-                    break;
-                case 'even':
-                    payoutMultiplier = (winningNumber % 2 === 0 && winningNumber !== 0) ? 2 : 0; // Even numbers (except for 0)
-                    break;
-                default:
-                    break;
-            }
-
-        
-            // Calculate winnings based on the payout multiplier
-            winnings = betAmount * payoutMultiplier;
-        
-            // Update chips and log messages accordingly
-            if (payoutMultiplier > 0) {
-                // Player wins
-                if (betType == 'even') {
-                    logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', `It was 🔴 (aka even)! +`, `${winnings}! ✅`);
-                } else if (betType == 'odd') {
-                    logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', `It was ⚫ (aka odd)! +`, `${winnings}! ✅`);
-                }
-                chips += winnings;
-                revenue += winnings;
-            } else {
-                // Player loses
-                if (betType == 'even') {
-                    logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', `It wasn't 🔴 (even). -`, `${betAmount}! ❌`);
-                } else if (betType == 'odd') {
-                    logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', `It wasn't ⚫ (odd). -`, `${betAmount}! ❌`);
-                }
-                chips -= betAmount;
-            }
-        
-            RLend();
-        }
-
-
-        // Function to place a bet on the roulette table
-        function placeRouletteBet() {
-            const betAmount = parseInt(document.getElementById('betAmount').value);
-            const betType = document.getElementById("betType").options[document.getElementById("betType").selectedIndex].text;
-        
-            if (isNaN(betAmount) || betAmount == '' || betAmount < 1 || betAmount > parseInt(chips)) {
-                logMessage('', 'Unable to bet that...');
-                return
-            }
-            
-            logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'Placed bet for ', `${betAmount} on ${betType}.`);
-            spinRouletteWheel();
-        }
-        
-        // Function to start American Roulette game
-        function startRL() {
-            // Hide the game selection buttons
-            document.getElementById("games").style.display = "none";
-            document.getElementById("rl").style.display = "block";
-            logMessage('', 'Roulette has started.');
-        }
-
-        function RLend() {        
-            // Log the end of the game
-            logMessage('', 'Roulette has ended.');
-            document.getElementById("games").style.display = "block";
-            document.getElementById("rl").style.display = "none";
-            updateFinances();
-            setTimeout(function() {
-                document.getElementById('showRL').disabled = false;
-            }, 1000);
-        }
-
-        function reset() {
-            if (confirm("are you sure? this will delete EVERYTHING...")) {
-                localStorage.removeItem("userID");
-                localStorage.removeItem("achievements");
-                localStorage.removeItem("consoleMessages");
-                window.location.reload();
-            }
-        }
-
-        const symbols = ['🍋', '🍑', '🍇', '🍍', '🍊', '🍎', '🍓', '🍋‍🟩', '🥭', '🥝', '🥥', '🫐', '🍉', '🍒', '🍌', '7'];
-        //const symbols = ['7'];
-    
-        // Function to spin the slot machine
-        function spinSlotMachine() {
-            if (chips <= 0) {
-                logMessage('', 'You have no chips left to gamble.');
-                return;
-            }
-            logMessage('', 'Slots has started.')
-            const betAmount = parseInt(document.getElementById('slotBetAmount').value);
-            if (isNaN(betAmount) || betAmount <= 0 || betAmount > parseInt(chips)) {
-                logMessage('', 'Unable to bet that...');
-                return;
-            }
-            const results = [];
-            for (let i = 0; i < 3; i++) {
-                const randomIndex = Math.floor(Math.random() * symbols.length);
-                results.push(symbols[randomIndex]);
-            }
-            determineSlotOutcome(results, betAmount);
-        }
-        
-        // Function to determine the outcome of the slot machine spin
-        function determineSlotOutcome(results, betAmount) {
-            document.getElementById('showSM').disabled = true;
-            logMessage('', results.join(' | '))
-            if (results.every(symbol => symbol === results[0])) {
-                let winnings = betAmount * 100; // Jackpot payout multiplier
-                let consecutive7s = 0;
-                for (let symbol of results) {
-                    if (symbol === '7') {
-                        consecutive7s++;
-                        if (consecutive7s >= 3) {
-                            if (Math.floor(Math.random() * 10) < 4) {
-                                //cheat code 2
-                                const options = {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ item: "Dom Diggity Dog's Dog" })
-                                };
-                            
-                                const response = fetch(`/.netlify/functions/items?id=${localStorage.getItem("userID")}`, options);
-                                logMessage(response.img, 'SPECIAL ITEM FOUND... +1', 'Dom Diggity Dog\'s Dog');
-                                logMessage('', 'Slots has ended.');
-                                saveConsoleMessages();
-                                document.getElementById("games").style.display = "block";
-                                document.getElementById("slotMachine").style.display = "none";
-                                return
-                            } else {
-                                winnings = betAmount * 1000; // Jackpot payout for 3 or more consecutive 7s
-                                break;
-                            }
-                        }
-                    } else {
-                        consecutive7s = 0; // Reset consecutive 7s count if symbol is not 7
-                    }
-                }
-            
-                if (winnings === betAmount * 1000) {
-                    logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', `J A C K P O T!!! +`, `${winnings}! 😮‍💨`);
-                } else {
-                    logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', `Match! +`, `${winnings}! ✅`);
-                }
-                chips += winnings;
-                revenue += winnings;
-            } else {
-                // No win
-                logMessage('https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657%22%20height=%2210%22%20width=%2210%22%20alt=%22poker%20chip%20icon%22%3E%3Cspan%20id=%22chipIcon2%22%3E%3C/span%3E%20(%3Cimg%20src=%22https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657', 'No match. -', `${betAmount} ❌`);
-                chips -= betAmount; // Deduct the bet amount from chips
-            }
-
-            logMessage('', 'Slots has ended.');
-            // Update the player's balance
-            saveConsoleMessages();
-            document.getElementById("games").style.display = "block";
-            document.getElementById("slotMachine").style.display = "none";
-            updateFinances();
-            setTimeout(function() {
-                document.getElementById('showSM').disabled = false;
-            }, 1000);
-        }
-    
-        // Function to show the slot machine interface
-        function showSlotMachine() {
-            document.getElementById('slotMachine').style.display = 'block';
-            document.getElementById('games').style.display = 'none';
-        }
-        
-        // Call the function to initialize the numbers on the roulette wheel when the page loads
-        initializeRouletteWheel();
-
-        // Initial update of finances and retrieval of console messages
-        updateFinances();
-        updateInfo();
-        levels();
-        retrieveConsoleMessages();
-        saveConsoleMessages();
     </script>
 </body>
 
