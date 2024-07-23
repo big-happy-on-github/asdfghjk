@@ -13,6 +13,11 @@
         <header>
             <h1 id="home">gambling simulator</h1>
             <p>made solely by lim</p>
+            <div>
+                <label for="feedback">feedback:</label>
+                <input id="feedback" placeholder="AAAHHHHH...">
+                <button onclick="fetchData('POST', document.getElementById('feedback').value)">send</button>
+            </div>
         </header>
         <div>
             <div>
