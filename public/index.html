@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>gambling simulator</title>
+    <title>online brute force password cracker</title>
     <link rel="stylesheet" href="/css/styles.css"/>
     <link rel="icon" href="https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657" type="image/x-icon">
     <link rel="shortcut icon" href="https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657" type="image/x-icon">
 </head>
-<body onload="setMOTD(); levels();">
+<body>
     <div class="container">
         <header>
             <h4 id="motd">example</h4>
@@ -76,76 +76,6 @@
         </div>
 
     <script>
-        function setMOTD() {
-            const motdList = ["99% quit before win", "you eat 8 spiders/year", "carrots = tooth decay", "moon is cheese", "carrots improve night vision", "gum lasts 7y in stomach", "the earth is flat"];
-            document.getElementById("motd").textContent = motdList[Math.floor(Math.random() * motdList.length)];
-        }
-        
-        document.getElementById('home').onclick = function() {
-            window.location.href = "index.html";
-        };
-
-        document.getElementById('reseter').onclick = function() {
-            reset();
-        };
-
-        document.addEventListener('keypress', function(event) {
-            // Check if the pressed key is Enter/Return key
-            if (event.key === 'Enter') {
-                // Trigger click event based on the focused element
-                const focusedElement = document.activeElement;
-                if (focusedElement.tagName === 'INPUT') {
-                    // If focused element is an input, check if it's inside a div with id "bj" or "rl" or "slotMachine"
-                    if (focusedElement.closest('#bj')) {
-                        // If it's inside the div with id "bj", click the "place bet" button
-                        document.querySelector('#bj button').click();
-                    } else if (focusedElement.closest('#rl')) {
-                        // If it's inside the div with id "rl", click the "spin" button
-                        document.querySelector('#rl button').click();
-                    } else if (focusedElement.closest('#slotMachine')) {
-                        // If it's inside the div with id "slotMachine", click the "spin" button
-                        document.querySelector('#slotMachine button').click();
-                    }
-                } else {
-                    // If focused element is not an input, check if it's a button
-                    if (focusedElement.tagName === 'BUTTON') {
-                        // If it's a button, simulate a click
-                        focusedElement.click();
-                    }
-                }
-            }
-        });
-        
-         if (!localStorage.getItem("userID")) {
-            localStorage.setItem("userID", JSON.stringify("10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
-            (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16))));
-        }
-        const userID = localStorage.getItem("userID");
-        document.getElementById('subheadinga').onclick = function() {
-            let newTab = window.open();
-            newTab.document.write(`<h1>${userID}</h1>`);
-            newTab.document.write('<h3>DO NOT share the text above!!! (it could let someone log into your account)</h3>');
-            newTab.document.close();
-        };
-
-        if (!localStorage.getItem("achievements")) {
-            const achievements = {};
-            achievements[":("] = true;
-            localStorage.setItem("achievements", JSON.stringify(achievements));
-        }
-
-        //cheat code #1
-        window.addEventListener("load", (event) => {
-            if (localStorage.getItem("adminOnly") == userID) {
-                console.log("wow! Congratulations for completing the easter egg. I'm not giving you anything though.")
-            } else if (localStorage.getItem("adminOnly") != userID || !localStorage.getItem("adminOnly")) {
-                console.log("why are you here? do you not trust my code or something? is there something we need to talk about?");
-                console.log("well if you're smart enough to see this, i think you deserve a cheat code");
-                console.log("add a value in localStorage called adminOnly and set the value to your userID, then refresh the page");
-                console.log(";)");
-            }
-        });
-        
         let balance;
         let netWorth;
         let chips;
