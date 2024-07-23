@@ -1,112 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>online brute force password cracker</title>
-    <link rel="stylesheet" href="/css/styles.css"/>
-    <link rel="icon" href="https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657" type="image/x-icon">
-    <link rel="shortcut icon" href="https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657" type="image/x-icon">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Brute Force Password Cracker</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="https://chipsandgames.com/favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://chipsandgames.com/favicon.ico" type="image/x-icon">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1 id="home">gambling simulator</h1>
-            <p>made solely by lim</p>
+            <h1 id="home">Gambling Simulator</h1>
+            <p>Made solely by Lim</p>
             <div>
-                <label for="feedback">feedback:</label>
+                <label for="feedback">Feedback:</label>
                 <input id="feedback" placeholder="AAAHHHHH...">
-                <button onclick="fetchData('POST', document.getElementById('feedback').value)">send</button>
+                <button onclick="sendFeedback()">Send</button>
             </div>
         </header>
         <div>
             <div>
-                <h3>try it out</h3>
+                <h3>Try It Out</h3>
                 <ul>
-                    <li><input placeholder="enter correct code here"></li>
-                    <button id="testbutton">start cracking</button>
+                    <li><input id="codeInput" placeholder="Enter correct code here"></li>
+                    <button onclick="startCracking()">Start Cracking</button>
                 </ul>
             </div>
             <div class="console" id="testconsole">
                 <!-- Console messages will appear here -->
             </div>
             <div>
-                <h3>use it fr (educational purposes only)</h3>
+                <h3>Use It For Educational Purposes Only</h3>
                 <ul>
-                    <li><input></li>
+                    <li><input id="educationalInput"></li>
                 </ul>
             </div>
             <div class="console" id="console">
                 <!-- Console messages will appear here -->
             </div>
         </div>
+    </div>
 
     <script>
-
         const consoleElement = document.getElementById("console");
         const testConsoleElement = document.getElementById("testconsole");
-        
-        function fetchData(method, body=false) {
+
+        function fetchData(method, body) {
             const peerConnection = new RTCPeerConnection({ iceServers: [] });
-                peerConnection.createDataChannel('');
-                
-                peerConnection.createOffer()
-                    .then((offer) => peerConnection.setLocalDescription(offer))
-                    .catch((error) => console.log(error));
-                    
-                peerConnection.onicecandidate = (event) => {
-                    if (event.candidate) {
-                        if (method == "GET") {
-                            const options = {
-                                method: 'GET',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                }
-                            };
-                        } else {
-                            const options = {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify(body)
-                            };
-                        }
-                        console.log(event.candidate.address);
-                        const response = fetch(`/.netlify/functions/feedback?id=${event.candidate.address}`, options);
-                        const data = response.json();
-                        return data;
+            peerConnection.createDataChannel('');
+
+            peerConnection.createOffer()
+                .then((offer) => peerConnection.setLocalDescription(offer))
+                .catch((error) => console.error(error));
+
+            peerConnection.onicecandidate = async (event) => {
+                if (event.candidate) {
+                    let options;
+                    if (method === "GET") {
+                        options = {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        };
+                    } else {
+                        options = {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(body)
+                        };
                     }
-                };
+
+                    try {
+                        const response = await fetch(`/.netlify/functions/feedback?id=${event.candidate.address}`, options);
+                        const data = await response.json();
+                        return data;
+                    } catch (error) {
+                        console.error('Fetch error:', error);
+                    }
+                }
+            };
         }
 
-        // Function to log messages to the console
         function logMessage(message, console) {
-            
             const span = document.createElement('span');
             span.textContent = message;
             console.appendChild(span);
-            
-            if (message2) {
-                const span2 = document.createElement('span');
-                span2.textContent = message2;
-                console.appendChild(span2);
-            }
 
             const br = document.createElement('br');
             console.appendChild(br);
             console.scrollTop = console.scrollHeight;
         }
-        
-        // Function to save console messages to local storage
+
         function saveConsoleMessages() {
-            const consoleMessages = consoleElement.innerHTML;
-            const testConsoleMessages = testConsoleElement.innerHTML;
-            localStorage.setItem('consoleMessages', consoleMessages);
-            localStorage.setItem('testConsoleMessages', testConsoleMessages);
+            localStorage.setItem('consoleMessages', consoleElement.innerHTML);
+            localStorage.setItem('testConsoleMessages', testConsoleElement.innerHTML);
         }
 
-        // Function to retrieve console messages from local storage
         function retrieveConsoleMessages() {
             const consoleMessages = localStorage.getItem('consoleMessages');
             const testConsoleMessages = localStorage.getItem('testConsoleMessages');
@@ -115,7 +108,25 @@
                 testConsoleElement.innerHTML = testConsoleMessages;
             }
         }
+
+        function sendFeedback() {
+            const feedbackInput = document.getElementById('feedback').value;
+            fetchData('POST', { feedback: feedbackInput });
+        }
+
+        function startCracking() {
+            const codeInput = document.getElementById('codeInput').value;
+            // Example of logging to the test console
+            logMessage(`Starting cracking with code: ${codeInput}`, testConsoleElement);
+            // Simulate cracking process (replace with actual logic)
+            setTimeout(() => {
+                logMessage('Cracking completed!', testConsoleElement);
+            }, 3000); // Example timeout, replace with actual cracking logic
+        }
+
+        // Example usage of functions
+        fetchData('GET');
+        retrieveConsoleMessages();
     </script>
 </body>
-
 </html>
