@@ -42,7 +42,7 @@
         const testConsoleElement = document.getElementById("testconsole");
         
         async function fetchData(method, body=false) {
-            if method == "GET" {
+            if (method == "GET") {
                 const options = {
                     method: 'GET',
                     headers: {
