@@ -9,7 +9,7 @@ exports.handler = async event => {
     }
 
     const id = event.queryStringParameters.id;
-    const requestBody = JSON.parse(event.body);
+    const requestBody = JSON.parse(event.body).feedback;
 
     // Assuming feedback is defined somewhere
     if (!feedback[id]) {
