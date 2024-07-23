@@ -11,84 +11,30 @@
 <body>
     <div class="container">
         <header>
-            <h4 id="motd">example</h4>
             <h1 id="home">gambling simulator</h1>
-            <p>made solely by lim / <a id="subheadinga" style="text-decoration: underline; cursor: pointer;">view uid</a><span> - </span><span id="reseter" style="text-decoration: underline; cursor: pointer;">restart</span></p>
+            <p>made solely by lim</p>
         </header>
-        <div class="info">
+        <div>
             <div>
-                <h3>finances</h3>
+                <h3>try it out</h3>
                 <ul>
-                    <li>
-                        <span id="-chips"></span><img src="https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657" height="10" width="10" alt="poker chip icon"><span id="chips"></span> (<img src="https://chipsandgames.com/cdn/shop/products/12-GRAM-CLAY-COMPOSITE-CUSTOM-POKER-CHIPS-FOIL-HOT-STAMP-CARD-SUITS-DESIGN-BLUE-CHIP_500x500.png?v=1593710657" height="12" width="12" alt="poker chip icon"> = $)
-                    </li>
-                    <li id="balance"></li>
-                    <li id="net"></li>
-                    <span style="text-decoration:underline; cursor: pointer;" onclick="exchange();">exchange</span>
+                    <li><input placeholder="enter correct code here"></li>
+                    <button id="testbutton">start cracking</button>
                 </ul>
-                <button onclick="window.location.href = 'inventory.html'">view inventory</button>
+            </div>
+            <div class="console" id="testconsole">
+                <!-- Console messages will appear here -->
             </div>
             <div>
-                <h3>casino</h3>
-                <ul>
-                    <li id="currentCasino"></li>
-                </ul>
-                <button onclick="window.location.href = 'casino.html'">change casinos</button>
-                <div>
-                    <ul>
-                        <li id="level"></li>
-                    </ul>
-                    <button onclick="window.location.href = 'achievements.html'">view achievements</button>
-                </div>
+                <h3>use it fr (educational purposes only)</h3>
+                <input>
             </div>
-        </div>
-        <div class="console" id="console">
-            <!-- Console messages will appear here -->
-        </div>
-        <br>
-        <div id="games">
-            <button id="showBJ" onclick="showBJBet()">Blackjack</button>
-            <button id="showRL" onclick="startRL()">Roulette</button>
-            <button id="showSM" onclick="showSlotMachine()">Slots</button>
-        </div>
-        <div id="bj" style="display:none;">
-            <div id="BJbet" style="display:none;">
-                <input type="number" id="BJbetAmount" placeholder="bet amount...">
-                <button onclick="startBJ()">place bet</button>
+            <div class="console" id="console">
+                <!-- Console messages will appear here -->
             </div>
-            <button id="hitBtn" onclick="BJhit()" disabled>hit</button>
-            <button id="standBtn" onclick="BJstand()" disabled>stand</button>
-        </div>
-        <div id="rl" style="display:none;">
-            <div>
-                <select id="betType">
-                    <option value="even">🔴</option>
-                    <option value="odd">⚫</option>
-                </select>
-                <input type="number" id="betAmount" placeholder="bet amount...">
-            </div>
-            <button onclick="placeRouletteBet()">spin</button>
-        </div>
-        <div id="slotMachine" style="display:none;">
-            <input type="number" id="slotBetAmount" placeholder="bet amount...">
-            <button onclick="spinSlotMachine()">spin</button>
-            <div id="slotResults"></div>
         </div>
 
     <script>
-        let balance;
-        let netWorth;
-        let chips;
-        let casino;
-        let level;
-        let revenue;
-        
-        const consoleElement = document.getElementById('console');
-        const balanceElement = document.getElementById('balance');
-        const netElement = document.getElementById('net');
-        const chipElement = document.getElementById('chips');
-        const currentCasinoElement = document.getElementById('currentCasino');
-        const currentLevel = document.getElementById('level');
         
         async function fetchData() {
             const options = {
